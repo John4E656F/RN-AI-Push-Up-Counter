@@ -1,119 +1,81 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
-import { Camera } from 'expo-camera'; // Import Camera only
-import * as tf from '@tensorflow/tfjs';
-import { cameraWithTensors } from '@tensorflow/tfjs-react-native';
-import * as posenet from '@tensorflow-models/posenet';
-import { initTensorFlow } from '../lib/TensorFlow';
+import React, { useState } from 'react';
+import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+// import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 
-enum MyCameraType {
-  FRONT = 'front',
-  BACK = 'back',
-}
+export default function App() {
+  const device = useCameraDevice('back');
+  const [facing, setFacing] = useState<'front' | 'back'>('back');
+  const { hasPermission, requestPermission } = useCameraPermission();
 
-const TensorCamera = cameraWithTensors(Camera as any);
-
-const PushUpCounter = () => {
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const cameraRef = useRef<any>(null);
-  const [model, setModel] = useState<posenet.PoseNet | null>(null);
-  const [count, setCount] = useState<number>(0);
-  const [isDown, setIsDown] = useState<boolean>(false);
-  const [cameraType, setCameraType] = useState<MyCameraType>(MyCameraType.FRONT); // Use MyCameraType
-
-  useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === 'granted');
-      if (status === 'granted') {
-        await initTensorFlow(); // Initialize TensorFlow
-        const loadedModel = await posenet.load(); // Load PoseNet model
-        setModel(loadedModel);
-      }
-    })();
-  }, []);
-
-  const handlePoseEstimation = async (tensor: tf.Tensor3D) => {
-    if (!model) return;
-    const pose = await model.estimateSinglePose(tensor, {
-      flipHorizontal: false,
-    });
-
-    const keypoints = pose.keypoints;
-    const leftShoulder = keypoints.find((k) => k.part === 'leftShoulder');
-    const rightShoulder = keypoints.find((k) => k.part === 'rightShoulder');
-    const leftHip = keypoints.find((k) => k.part === 'leftHip');
-    const rightHip = keypoints.find((k) => k.part === 'rightHip');
-
-    if (leftShoulder && rightShoulder && leftHip && rightHip) {
-      const avgShoulderY = (leftShoulder.position.y + rightShoulder.position.y) / 2;
-      const avgHipY = (leftHip.position.y + rightHip.position.y) / 2;
-      const threshold = 50; // Adjust threshold based on your needs
-
-      if (avgShoulderY > avgHipY + threshold && !isDown) {
-        setIsDown(true);
-      } else if (avgShoulderY < avgHipY - threshold && isDown) {
-        setIsDown(false);
-        setCount((prevCount) => prevCount + 1);
-      }
-    }
-
-    tf.dispose(tensor);
-  };
-
-  const toggleCameraType = () => {
-    setCameraType((currentType) => (currentType === MyCameraType.FRONT ? MyCameraType.BACK : MyCameraType.FRONT));
-  };
-
-  if (hasPermission === null) {
-    return <Text>Requesting Camera Permission...</Text>;
+  if (!hasPermission) {
+    // Camera permissions are not granted yet.
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>We need your permission to show the camera</Text>
+        <Button onPress={requestPermission} title='Grant Permission' />
+      </View>
+    );
   }
-  if (hasPermission === false) {
-    return <Text>No access to camera</Text>;
+
+  if (device == null) {
+    // Camera permissions are not granted yet.
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>Device have no camera</Text>
+      </View>
+    );
+  }
+
+  function toggleCameraFacing() {
+    setFacing((current) => (current === 'back' ? 'front' : 'back'));
   }
 
   return (
     <View style={styles.container}>
-      <Text>Push-up Counter: {count}</Text>
-      <TensorCamera
-        ref={cameraRef}
-        style={styles.camera}
-        type={cameraType}
-        useCustomShadersToResize={false}
-        cameraTextureHeight={1920}
-        cameraTextureWidth={1080}
-        resizeHeight={224}
-        resizeWidth={224}
-        resizeDepth={3}
-        onReady={(images) => {
-          const loop = async () => {
-            const imageTensor = images.next().value;
-            if (imageTensor) {
-              await handlePoseEstimation(imageTensor);
-            }
-            requestAnimationFrame(loop);
-          };
-          loop();
-        }}
-        autorender={true}
-      />
-      <Button title='Flip Camera' onPress={toggleCameraType} />
+      <Camera style={StyleSheet.absoluteFill} device={device} isActive={true} />
+      {/* <CameraView style={styles.camera} facing={facing}>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
+            <Text style={styles.text}>Flip Camera</Text>
+          </TouchableOpacity>
+        </View>
+      </CameraView> */}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    width: '100%',
+    // alignItems: 'center',
+    // justifyContent: 'center',
+  },
+  message: {
+    textAlign: 'center',
+    paddingBottom: 10,
+  },
   camera: {
-    width: 200,
-    height: 200,
+    width: '100%',
+    height: '100%',
     borderRadius: 10,
     overflow: 'hidden',
   },
-  container: {
+  buttonContainer: {
     flex: 1,
+    flexDirection: 'row',
+    backgroundColor: 'transparent',
+    margin: 64,
+  },
+  button: {
+    flex: 1,
+    alignSelf: 'flex-end',
     alignItems: 'center',
-    justifyContent: 'center',
+  },
+  text: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
   },
 });
-
-export default PushUpCounter;
