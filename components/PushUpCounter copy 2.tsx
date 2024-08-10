@@ -4,9 +4,10 @@ import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 
 export default function App() {
-  const [facing, setFacing] = useState<'front' | 'back'>('front');
+  const device = useCameraDevice('back');
+  const [facing, setFacing] = useState<'front' | 'back'>('back');
   const { hasPermission, requestPermission } = useCameraPermission();
-  const device = useCameraDevice(facing);
+
   if (!hasPermission) {
     // Camera permissions are not granted yet.
     return (
@@ -33,11 +34,6 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Camera style={StyleSheet.absoluteFill} device={device} isActive={true} />
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
-          <Text style={styles.text}>Flip Camera</Text>
-        </TouchableOpacity>
-      </View>
       {/* <CameraView style={styles.camera} facing={facing}>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
