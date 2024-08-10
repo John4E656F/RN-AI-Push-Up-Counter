@@ -1,15 +1,15 @@
-// Learn more https://docs.expo.io/guides/customizing-metro
 const { getDefaultConfig } = require('expo/metro-config');
+const { mergeConfig } = require('@react-native/metro-config');
 
-// module.exports = getDefaultConfig(__dirname);
+// Get default Expo configuration
+const defaultConfig = getDefaultConfig(__dirname);
 
-module.exports = (() => {
-  const defaultConfig = getDefaultConfig(__dirname);
-  const { assetExts } = defaultConfig.resolver;
-  return {
-    resolver: {
-      // Add bin to assetExts
-      assetExts: [...assetExts, 'bin'],
-    },
-  };
-})();
+// Define custom configuration
+const customConfig = {
+  resolver: {
+    assetExts: ['tflite', ...defaultConfig.resolver.assetExts],
+  },
+};
+
+// Merge custom configuration with default configuration
+module.exports = mergeConfig(defaultConfig, customConfig);

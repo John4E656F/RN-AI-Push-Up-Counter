@@ -1829,6 +1829,16 @@
     hermes-parser "0.19.1"
     nullthrows "^1.1.1"
 
+"@react-native/metro-config@^0.74.87":
+  version "0.74.87"
+  resolved "https://registry.yarnpkg.com/@react-native/metro-config/-/metro-config-0.74.87.tgz#6f5dffff256aca1dc2a0ad2a8f2f41e4ac39a810"
+  integrity sha512-WjXk7GmzL7/+e5qqc9uumQSl6uCqNlpo8LaKuMxxlUfQ6DsWSXIdbLXmD1k5qTURjL0fZjVQGszgvT1xKYifaQ==
+  dependencies:
+    "@react-native/js-polyfills" "0.74.87"
+    "@react-native/metro-babel-transformer" "0.74.87"
+    metro-config "^0.80.3"
+    metro-runtime "^0.80.3"
+
 "@react-native/normalize-colors@0.74.84":
   version "0.74.84"
   resolved "https://registry.yarnpkg.com/@react-native/normalize-colors/-/normalize-colors-0.74.84.tgz#4764d59775c17a6ed193509cb01ae2f42dd5c045"
