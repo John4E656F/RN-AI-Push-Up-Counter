@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { TensorflowModel, useTensorflowModel } from 'react-native-fast-tflite';
 import { Button, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
 import { Camera, useCameraDevice, useCameraPermission, useFrameProcessor } from 'react-native-vision-camera';
+
+function tensorToString(tensor: TensorflowModel['inputs'][number]): string {
+  return `${tensor.dataType} [${tensor.shape}]`;
+}
 
 export default function App() {
   const [facing, setFacing] = useState<'front' | 'back'>('front');
@@ -8,12 +13,20 @@ export default function App() {
   const device = useCameraDevice(facing);
 
   const delegate = Platform.OS === 'ios' ? 'core-ml' : undefined;
+  const plugin = useTensorflowModel(require('../assets/pose-detection-fast.tflite'), delegate);
 
   const frameProcessor = useFrameProcessor((frame) => {
     'worklet';
     // console.log(`Received a ${frame.width} x ${frame.height} Frame!`);
   }, []);
 
+  useEffect(() => {
+    const model = plugin.model;
+    if (model == null) {
+      return;
+    }
+    console.log(`Model: ${model.inputs.map(tensorToString)} -> ${model.outputs.map(tensorToString)}`);
+  }, [plugin]);
   if (!hasPermission) {
     // Camera permissions are not granted yet.
     return (

@@ -13,3 +13,12 @@ const customConfig = {
 
 // Merge custom configuration with default configuration
 module.exports = mergeConfig(defaultConfig, customConfig);
+
+// const config = getDefaultConfig(__dirname, {
+//   isCSSEnabled: true,
+//   resolver: {
+//     sourceExts: ["jsx", "js", "ts", "tsx", "cjs", "json"]
+//   },
+// });
+
+// config.resolver.assetExts.push("tflite");
